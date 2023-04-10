@@ -1,0 +1,137 @@
+server:
+  port: 8081 #adapter 服务端口
+#### json处理的相关配置
+spring:
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+#### canal的核心配置
+canal.conf:
+  # 数据来源适配的类型
+  mode: tcp #tcp kafka rocketMQ rabbitMQ
+  # 扁平message开关, 是否以json字符串形式投递数据, 仅在kafka/rocketMQ模式下有效
+  flatMessage: true
+  # canal.adapter集群zk的配置
+  # adapter集群环境配置，主备锁。
+  zookeeperHosts:
+  # 设置每次批量大小，把数据传给数据消费适配器处理
+  #批处理条数 #当一次dml大于syncBatchSize时，拆分成每次1000进行提交
+  syncBatchSize: 1000
+  # 用于获取数据时，异常时处理，重试次数。-1时表示一致阻塞（其实就是设值为 Integer.MAX）。
+  #重试次数 ，-1堵塞一直重试。默认1次。
+  retries: -1
+  # 用于获取数据时。等待数据的时长。单位毫秒。（默认 500L）
+   #同步超时 默认500
+  timeout:
+  # aliyun ak/sk
+  accessKey:
+  secretKey:
+  ###  数据来源
+  # 消息服务消费端地址，根据mode读取
+  consumerProperties:
+    # canal tcp consumer
+    canal.tcp.server.host: deployer:11111
+    canal.tcp.zookeeper.hosts:
+    canal.tcp.batch.size: 500
+    canal.tcp.username:
+    canal.tcp.password:
+    # kafka consumer
+    # kafka.bootstrap.servers: 127.0.0.1:9092
+    # kafka.enable.auto.commit: false
+    # kafka.auto.commit.interval.ms: 1000
+    # kafka.auto.offset.reset: latest
+    # kafka.request.timeout.ms: 40000
+    # kafka.session.timeout.ms: 30000
+    # kafka.isolation.level: read_committed
+    # kafka.max.poll.records: 1000
+    # rocketMQ consumer
+    # rocketmq.namespace:
+    # rocketmq.namesrv.addr: 127.0.0.1:9876
+    # rocketmq.batch.size: 1000
+    # rocketmq.enable.message.trace: false
+    # rocketmq.customized.trace.topic:
+    # rocketmq.access.channel:
+    # rocketmq.subscribe.filter:
+    # rabbitMQ consumer
+    # rabbitmq.host:
+    # rabbitmq.virtual.host:
+    # rabbitmq.username:
+    # rabbitmq.password:
+    # rabbitmq.resource.ownerId:
+
+### 数据来源的 数据源配置，支持配置多个。主要是在操作restApi进行同步时用于查询来源数据使用的。
+  srcDataSources:
+    corpDS:
+      url: jdbc:mysql://database:3306/corp?useUnicode=true
+      username: root
+      password: 5257mq
+
+### 数据去处时适配器配置。可以配置多个，并发执行。每个适配器都有个对应的instance。
+ # 同步适配器列表，同步到哪各数据源
+  canalAdapters:
+  # 对应canal destination 或者 topic
+  # canal 实例名或者 MQ topic 名
+  - instance: house_register # canal instance Name or mq topic name
+  # 消费组，可以配置多个。组之间是 并行
+  # 适配器组，支持多个不同入库数据源
+    groups:
+    # 消费组其一的ID  
+    # 分组id, 如果是MQ模式将用到该值
+    - groupId: g1
+    # 消费者 group_01 下的多个数据去处 适配器。
+    # 组内的适配器是串行处理。如果其中一个异常，会导致下面的的适配器不能执行。
+    # 分组内适配器列表
+      outerAdapters:
+      # 打印获取到的消息数据日志
+      - name: logger
+      # 适配器类型。即目前支持的通过SPI加载的适配器。从 plugin文件夹中读取的。
+#      - name: rdb
+# 适配器key。具体适配器yml中配置 outerAdapterKey引用。
+#        key: mysql1
+#        properties:
+#          jdbc.driverClassName: com.mysql.jdbc.Driver
+#          jdbc.url: jdbc:mysql://127.0.0.1:3306/mytest2?useUnicode=true
+#          jdbc.username: root
+#          jdbc.password: 121212
+#          druid.stat.enable: false
+#          druid.stat.slowSqlMillis: 1000
+#      - name: rdb
+#        key: oracle1
+#        properties:
+#          jdbc.driverClassName: oracle.jdbc.OracleDriver
+#          jdbc.url: jdbc:oracle:thin:@localhost:49161:XE
+#          jdbc.username: mytest
+#          jdbc.password: m121212
+#      - name: rdb
+#        key: postgres1
+#        properties:
+#          jdbc.driverClassName: org.postgresql.Driver
+#          jdbc.url: jdbc:postgresql://localhost:5432/postgres
+#          jdbc.username: postgres
+#          jdbc.password: 121212
+#          threads: 1
+#          commitSize: 3000
+#      - name: hbase
+#        properties:
+#          hbase.zookeeper.quorum: 127.0.0.1
+#          hbase.zookeeper.property.clientPort: 2181
+#          zookeeper.znode.parent: /hbase
+      - name: es7 #用于匹配Adapter，如 ES7xAdapter
+        #key: es-user #必须有key，否则是比es里面的配置
+        hosts: elasticsearch:9200 # 127.0.0.1:9200 for rest mode
+        properties:
+          mode: rest #transport or rest # 9300对应transport or 9200对应rest
+          # security.auth: test:123456 #  only used for rest mode
+          cluster.name: docker-cluster
+#      - name: kudu
+#        key: kudu
+#        properties:
+#          kudu.master.address: 127.0.0.1 # ',' split multi address
+#      - name: phoenix
+#        key: phoenix
+#        properties:
+#          jdbc.driverClassName: org.apache.phoenix.jdbc.PhoenixDriver
+#          jdbc.url: jdbc:phoenix:127.0.0.1:2181:/hbase/db
+#          jdbc.username:
+#          jdbc.password:

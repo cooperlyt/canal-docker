@@ -1,0 +1,23 @@
+# dataSourceKey 在binlog数据同步时用不到。但是在人工restApi时必须要有
+#源数据源的key, 对应上面配置的srcDataSources中的值
+dataSourceKey: corpDS
+#outerAdapterKey: es-user # 对应application.yml中es配置的key
+#表示对应的 application.yml中的 instance
+# cannal的instance或者MQ的topic
+destination: house_register
+#对应哪个outerAdapter的消费组
+# 对应MQ模式下的groupId, 只会同步对应groupId的数据
+groupId: g1
+
+esMapping:
+  _index: corp # es 的索引名称
+  _id: id # es 的_id, 如果不配置该项必须配置下面的pk项_id则会由es自动分配
+  #upsert: true # 支持不存在新增操作
+  sql: "SELECT t1.corp_id as id,t2.name,t2.corp_id_type,t2.corp_id_number,t2.tel,t2.owner_name as owner,t2.address,CONCAT('[',r.register,']') AS register FROM corp t1 LEFT JOIN corp_snapshot t2 on t1.info_id = t2.info_id LEFT JOIN (SELECT r1.corp_id,GROUP_CONCAT(JSON_OBJECT('type',r1.type,'register_id',r1.register_id,'level',r2.level,'level_number',r2.level_number)) AS register FROM corp_register r1 LEFT JOIN qualification_snapshot r2 on r1.qualification_id = r2.qualification_id WHERE r1.disabled = false GROUP BY corp_id ) r ON r.corp_id = t1.corp_id"
+  objFields:
+    register: object
+
+  #  objFields:
+  #    _labels: array:; # 数组或者对象属性, array:; 代表以;字段里面是以;分隔的
+  etlCondition: "where t1.update_date>={}" # etl 的条件参数，通过服务的etl接口传入。
+  commitBatch: 3000 # 提交批大小
