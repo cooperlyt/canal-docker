@@ -46,9 +46,7 @@ RUN \
     mkdir -p home/admin/canal-server/logs  && \
     chmod +x /home/admin/*.sh  && \
     chmod +x /home/admin/bin/*.sh  && \
-    chown admin: -R /home/admin && \
-    yum clean all && \
-    true
+    chown admin: -R /home/admin
 
 # 11110 admin , 11111 canal , 11112 metrics, 9100 exporter
 EXPOSE 11110 11111 11112 9100
