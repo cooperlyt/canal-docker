@@ -19,11 +19,16 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
+      - name: Log in to Docker Hub
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
         with:
-          distribution: 'temurin' 
-          java-version: '17'
+          username: coopersoft
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2          
       - shell: bash
-        run: cd examples && ./docker-build.sh test
-      - run: cd examples && docker compose --verbose up --build --wait
+        run: cd canal-server && ./docker_build.sh
+
 
