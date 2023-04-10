@@ -1,26 +1,15 @@
-# dataSourceKey 在binlog数据同步时用不到。但是在人工restApi时必须要有
-#源数据源的key, 对应上面配置的srcDataSources中的值
 dataSourceKey: defaultDS
-#outerAdapterKey: es-user # 对应application.yml中es配置的key
-#表示对应的 application.yml中的 instance
-# cannal的instance或者MQ的topic
 destination: example
-#对应哪个outerAdapter的消费组
-# 对应MQ模式下的groupId, 只会同步对应groupId的数据
 groupId: g1
-
 esMapping:
-  _index: customer # es 的索引名称
-  _id: id # es 的_id, 如果不配置该项必须配置下面的pk项_id则会由es自动分配
-  #upsert: true # 支持不存在新增操作
+  _index: customer
+  _id: id
   relations:
     customer_order:
       name: customer
   sql: "select t.id, t.name, t.email from customer t"
-#  objFields:
-#    _labels: array:; # 数组或者对象属性, array:; 代表以;字段里面是以;分隔的
-  etlCondition: "where t.c_time>={}" # etl 的条件参数，通过服务的etl接口传入。
-  commitBatch: 3000 # 提交批大小
+  etlCondition: "where t.c_time>={}"
+  commitBatch: 3000
 
 
 #{
