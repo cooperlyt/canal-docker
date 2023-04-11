@@ -44,7 +44,7 @@ if [ ! -f "$pidfile" ];then
 fi
 
 pid=`cat $pidfile`
-if [ "$pid" == "" ] ; then
+if [ "$pid" = "" ] ; then
 	pid=`get_pid "appName=canal-adapter"`
 fi
 
@@ -55,11 +55,11 @@ LOOPS=0
 while (true); 
 do 
 	gpid=`get_pid "appName=canal-adapter" "$pid"`
-    if [ "$gpid" == "" ] ; then
+    if [ "$gpid" = "" ] ; then
     	echo "Oook! cost:$LOOPS"
     	`rm $pidfile`
     	break;
     fi
-    let LOOPS=LOOPS+1
+    LOOPS=LOOPS+1
     sleep 1
 done
